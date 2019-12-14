@@ -14,4 +14,4 @@ gnuCash = gnuCashAccess(path)
 #dfExpAccounts = groupAcc(dfSplits, dfAccounts, '2550a442ee387d7550de6b9e6d61f47a')
 tree = TreeSearch(gnuCash.dfAccounts, 'guid', 'parent_guid')
 
-level, test = tree.searchTree('5ae680287861ddff39edd8a8d48badcd', 'guid')
+test = tree.searchTree('5ae680287861ddff39edd8a8d48badcd', 'guid')

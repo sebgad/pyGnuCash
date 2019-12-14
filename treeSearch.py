@@ -54,21 +54,20 @@ class TreeSearch():
             else:
                 self.strParent = objChild.copy()
         
-    def searchTree(self, strParentID, strFieldName, lstSearchTree=[], level=1):
+    def searchTree(self, strParentID, strFieldName, lstSearchTree=[]):
         '''
         Search the Tree from top node to bottom nodes and returns a list 
         of a specified Field of all children of a node.
         '''
         lstChildren = self.dictChildLookup.get(strParentID, list())
-        level += 1
         if len(lstChildren) > 0:
             for objChild in lstChildren:
                 lstSearchTree.append(objChild[self.strNodeID])
                 self.searchTree(objChild[self.strNodeID], 
                                 strFieldName, 
-                                lstSearchTree,
-                                level)
+                                lstSearchTree
+                                )
                 
-        return lstSearchTree, level
+        return lstSearchTree
         
             
