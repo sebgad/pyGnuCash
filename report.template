@@ -27,116 +27,33 @@ h1,h2 {
    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
    }
 
-
 </style>
 </head>
 <body>
     <h1>Finance Report Time Period: {{ timePeriod }}</h1>
-    <h2>Monthly Expenses</h2>
-    <img src="data:image/png;base64,{{IMGmonthlyExp}}">
-    <table padding="20pt", id="customers">
-        <tr>
-            {% for column in monthlyExp.columns %}
-            <th>{{ column }}</th>
+    {% for Repitem in ReportItems %}
+        <h2>{{ Repitem.title }}</h2>
+        <img src="data:image/png;base64,{{ Repitem.figByteString64 }}">
+        <table padding="20pt", id="customers">
+            <tr>
+            {% for tblcol in Repitem.df.columns %}
+                <th>{{ tblcol }}</th>
             {% endfor %}
-        </tr>
-        {% for idx, row in monthlyExp.iterrows() %}
-        <tr align="right">
-            <td>{{ row.iloc[0] }}</td>
-            {% for colname in monthlyExp.columns[1:] %}
-                <td>{{ "{:0.2f}&euro;".format(row[colname]) }}</td>
+            </tr>
+            
+            {% for i, tblrow in Repitem.df.iterrows() %}
+                <tr align="right">
+                {% for tblcol in Repitem.df.columns %}    
+                    {% if tblrow[tblcol] is not string %}
+                        <td>{{ "{:0.2f}&euro;".format(tblrow[tblcol]) }}</td>
+                    {% else %}
+                        <td>{{ tblrow[tblcol] }}</td>
+                    {% endif %}
+                {% endfor %}
+                </tr>
             {% endfor %}
-        </tr>
-        {% endfor %}
-    </table>
-
-    <h2>Transportation Expenses</h2>
-    <img src="data:image/png;base64,{{IMGmonthlyTransExp}}">
-    <table padding="20pt", id="customers">
-        <tr>
-            {% for column in monthlyTransExp.columns %}
-            <th>{{ column }}</th>
-            {% endfor %}
-        </tr>
-        {% for idx, row in monthlyTransExp.iterrows() %}
-        <tr align="right">
-            <td>{{ row.iloc[0] }}</td>
-            {% for colname in monthlyTransExp.columns[1:] %}
-            <td>{{ "{:0.2f}&euro;".format(row[colname]) }}</td>
-            {% endfor %}
-        </tr>
-        {% endfor %}
-    </table>
-    
-    <h2>Average Monthly Expenses</h2>
-    <img src="data:image/png;base64,{{IMGavgExp}}">
-    <table padding="20pt", id="customers", style="width:30%">
-        <tr>
-            {% for column in avgExp.columns %}
-            <th>{{ column }}</th>
-            {% endfor %}
-        </tr>
-        {% for idx, row in avgExp.iterrows() %}
-        <tr align="right">
-            <td>{{ row.iloc[0] }}</td>
-            {% for colname in avgExp.columns[1:] %}
-            <td>{{ "{:0.2f}&euro;".format(row[colname]) }}</td>
-            {% endfor %}
-        </tr>
-        {% endfor %}
-    </table>
-    <h2>Monthly Income</h2>
-    <img src="data:image/png;base64,{{IMGmonthlyInc}}">
-    <table padding="20pt", id="customers">
-        <tr>
-            {% for column in monthlyInc.columns %}
-            <th>{{ column }}</th>
-            {% endfor %}
-        </tr>
-        {% for idx, row in monthlyInc.iterrows() %}
-        <tr align="right">
-            <td>{{ row.iloc[0] }}</td>
-            {% for colname in monthlyInc.columns[1:] %}
-                <td>{{ "{:0.2f}&euro;".format(row[colname]) }}</td>
-            {% endfor %}
-        </tr>
-        {% endfor %}
-    </table>
-    
-    <h2>Total Overview</h2>
-    <img src="data:image/png;base64,{{IMGoverview}}">
-    <table padding="20pt", id="customers">
-        <tr>
-            {% for column in overview.columns %}
-            <th>{{ column }}</th>
-            {% endfor %}
-        </tr>
-        {% for idx, row in overview.iterrows() %}
-        <tr align="right">
-            <td>{{ row.iloc[0] }}</td>
-            {% for colname in overview.columns[1:] %}
-                <td>{{ "{:0.2f}&euro;".format(row[colname]) }}</td>
-            {% endfor %}
-        </tr>
-        {% endfor %}
-    </table>
-    
-    <h2>Averaged Total Overview</h2>
-    <img src="data:image/png;base64,{{IMGoverviewAVG}}">
-    <table padding="20pt", id="customers">
-        <tr>
-            {% for column in overviewAVG.columns %}
-            <th>{{ column }}</th>
-            {% endfor %}
-        </tr>
-        {% for idx, row in overviewAVG.iterrows() %}
-        <tr align="right">
-            <td>{{ row.iloc[0] }}</td>
-            {% for colname in overviewAVG.columns[1:] %}
-                <td>{{ "{:0.2f}&euro;".format(row[colname]) }}</td>
-            {% endfor %}
-        </tr>
-        {% endfor %}
-    </table>
-    
+        </table>
+    <br />
+    <br />
+    {% endfor %}
 </body>

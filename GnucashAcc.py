@@ -14,8 +14,6 @@ from treeSearch import TreeSearch
 
 pd.set_option('display.max_columns', 20)
 
-path = r"/home/sebastian/Dokumente/Bank/GnuCashSoftware/Privatvermögen.db.sql.gnucash"
-
 class gnuCashAccess():
     '''
     Access GnuCash created SQL-Lite File to get Splits and Accounts
@@ -48,6 +46,13 @@ class gnuCashAccess():
         self.dfSplits['price'] = self.dfSplits.value_num / self.dfSplits.value_denom
         self.dfSplits['post_month'] = self.dfSplits.post_date.dt.strftime("%Y-%m")
     
+    def getAccGuid(self, name):
+        idx = self.dfAccounts['name'] == name
+        if idx.sum() == 1:
+            return self.dfAccounts[idx]['guid'].values[0]
+        else:
+            raise("%s Datasets found" % idx.sum())
+    
     def getSplits(self, ParentID, startDate=None, endDate=None):
         '''
         get all Splits, grouped monthly, in a specified Date Range from a specified
@@ -75,13 +80,15 @@ class gnuCashAccess():
         df_grouped = pd.DataFrame(index=df_month_unique.index)
         
         for childAcc in lst_directChildren:
-            lst_children = self.objAccTree.searchTree(childAcc['guid'], 'guid', [])
+            lst_children = self.objAccTree.getParentChildren(childAcc['guid'], 'guid')
             if childAcc['placeholder'] == 0:
                 lst_children.append(childAcc['guid'])
             
             idx = (self.dfSplits['account_guid'].isin(lst_children)) & (idxDateRng)
             
             df_grouped[childAcc['name']] = self.dfSplits[idx].groupby(by='post_month').agg('sum')['price']
+        
+        df_grouped.fillna(value=0, inplace=True)
         
         return df_grouped
     
@@ -106,12 +113,13 @@ class gnuCashAccess():
             TOPitems = df.sum(axis=0).sort_values(ascending=False).index
             dfTOP = df[TOPitems[:TOP]].copy()
             dfTOP['others'] = df[TOPitems[TOP:]].sum(axis=1).copy()
-            return dfTOP
+            
         elif axis == 0:
             dfSort = df.sort_values(ascending=False)
             dfTOP = dfSort.iloc[:TOP]
             dfTOP['others'] = dfSort.iloc[TOP:].sum()
-            return dfTOP
 
+        dfTOP.fillna(value=0, inplace=True)
+        return dfTOP
 
 
