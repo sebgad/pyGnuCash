@@ -14,16 +14,26 @@ import numpy as np
 import matplotlib.ticker as mticker
 
 class ReportItem():
-    def __init__(self, df, title=None):
+    def __init__(self, df, title=None, showTotal=True):
+        self.showTotal = None
+        
         if isinstance(df, pd.DataFrame):
             self.cols = df.columns
             self.cols = ['Date'] + self.cols.tolist()
             self.df = df.reset_index()
             self.df.columns = self.cols
+            
+            if showTotal == True:
+                self.showTotal = 'column'
+        
         elif isinstance(df, pd.Series):
             self.df = pd.DataFrame(df).reset_index()
             self.cols = ['Typ', 'Amount']
             self.df.columns = self.cols
+            
+            if showTotal == True:
+                self.showTotal = 'row'
+        
         self.figsize = (22, 15)
         self.figsize = np.array(self.figsize)/2.54
         self.title = title
@@ -69,6 +79,14 @@ class ReportItem():
         plt.close(f)
             
     def ConvertForHtml(self):
+        if self.showTotal == 'column':
+            self.cols = self.cols + ['Total']
+            self.df['Total'] = self.df.iloc[:,1:].sum(axis=1)
+        
+        elif self.showTotal == 'row':
+            self.cols = self.cols + ['Total']
+            dfSum = pd.DataFrame({'Amount':self.df.sum(axis=0)}, index=['Total'])
+            self.df = pd.concat([self.df, dfSum], axis=0)
         self.ConvSpecChar()
         
     def ConvSpecChar(self):

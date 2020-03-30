@@ -40,7 +40,7 @@ h1,h2 {
                 <th>{{ tblcol }}</th>
             {% endfor %}
             </tr>
-            
+                        
             {% for i, tblrow in Repitem.df.iterrows() %}
                 <tr align="right">
                 {% for tblcol in Repitem.df.columns %}    

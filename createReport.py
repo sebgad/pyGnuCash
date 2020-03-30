@@ -47,33 +47,36 @@ monthlyRepItem.ConvertForHtml()
 
 ReportItems.append(monthlyRepItem)
 
-# Get Monthly Costs for Transportation
-monthlyFahrtkosten = gnuCash.getSplits(ParentID=r'5ae680287861ddff39edd8a8d48badcd',
-                                              startDate=startDate,
-                                              endDate=endDate)
+# Get Monthly Costs for Cars
+monthlyFahrtkosten = gnuCash.getSplits(ParentID=r'1542bb4cdae5b30b21ee37aecc0fdd41',
+                                       startDate=startDate,
+                                       endDate=endDate)
 
-monthlyFahrtRepItem = ReportItem(monthlyFahrtkosten, "Monthly Transportation Expenses")
+monthlyFahrtRepItem = ReportItem(monthlyFahrtkosten, "Monthly Expenses for Vehicles")
 monthlyFahrtRepItem.create_figure(kind='stackedbar',
                                   args={'ylabel':'Expense [EUR]',
                                         'xlabel':'Month'})
 monthlyFahrtRepItem.ConvertForHtml()
 ReportItems.append(monthlyFahrtRepItem)
 
-# Get yearly averaged Costs
+# Get yearly averaged Expenses
 avgMonthlyExp = (monthlyExp.mean()).clip(lower=0).sort_values(ascending=False)
 avgMonthlyExpTOP = gnuCash.getTOP(avgMonthlyExp, axis=0)
-AVGmonthlyRepItem = ReportItem(avgMonthlyExpTOP, "Yearly Averaged monthly Expenses")
+AVGmonthlyRepItem = ReportItem(avgMonthlyExpTOP, 
+                               "Yearly Averaged monthly Expenses",
+                               showTotal=False)
 AVGmonthlyRepItem.create_figure(kind='pie',
                                 )
 
 ReportItems.append(AVGmonthlyRepItem)
 
-# Get the two highest Cost accountss
+# Get the two highest Cost accounts
 TOP1Exp = gnuCash.getSplits(gnuCash.getAccGuid(avgMonthlyExpTOP.index[0]),
                             startDate=startDate,
                             endDate=endDate).mean()
 
-TOP1RepItem = ReportItem(TOP1Exp, "TOP1 highest Expense Account: " + avgMonthlyExpTOP.index[0])
+TOP1RepItem = ReportItem(TOP1Exp, "TOP1 highest Expense Account: " + avgMonthlyExpTOP.index[0],
+                         showTotal=False)
 TOP1RepItem.create_figure(kind='pie')
 ReportItems.append(TOP1RepItem)
 
@@ -81,7 +84,8 @@ TOP2Exp = gnuCash.getSplits(gnuCash.getAccGuid(avgMonthlyExpTOP.index[1]),
                             startDate=startDate,
                             endDate=endDate).mean()
 
-TOP2RepItem = ReportItem(TOP2Exp, "TOP2 highest Expense Account: " + avgMonthlyExpTOP.index[1])
+TOP2RepItem = ReportItem(TOP2Exp, "TOP2 highest Expense Account: " + avgMonthlyExpTOP.index[1],
+                         showTotal=False)
 TOP2RepItem.create_figure(kind='pie')
 ReportItems.append(TOP2RepItem)
 
@@ -108,7 +112,7 @@ overview['Income'] = monthlyInc.sum(axis=1)
 overview['Expenses'] = monthlyExp.sum(axis=1)
 overview['Balance'] = overview['Income']-overview['Expenses']
 
-monthlyOvRepItem = ReportItem(overview, "Account Balance")
+monthlyOvRepItem = ReportItem(overview, "Account Balance", showTotal=False)
 monthlyOvRepItem.create_figure(kind='bar',
                                args={'ylabel':'Amount [EUR]',
                                    'xlabel':'Month'})
@@ -117,7 +121,7 @@ ReportItems.append(monthlyOvRepItem)
 
 # Average Balance
 mean_overview = overview.mean()
-monthlyOvAVGRepItem = ReportItem(mean_overview, "AVG Account Balance")
+monthlyOvAVGRepItem = ReportItem(mean_overview, "AVG Account Balance", showTotal=False)
 monthlyOvAVGRepItem.create_figure(kind='bar',
                                   args={'ylabel':'Average Amount [EUR]',
                                         'xlabel':'Typ'})

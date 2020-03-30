@@ -33,7 +33,7 @@ class TreeSearch():
         self.createChildLookup()
         
     def createChildLookup(self):
-        '''
+        """
         Creates a Dictionary where the key value contains the ID of the node
         and the value contains a list of the (direct) children (only one level)
         below.
@@ -41,7 +41,7 @@ class TreeSearch():
         Return:
             - strParent: Parent Node
             - dict_ChildLookup: Dictionary of nodes with children as values
-        '''
+        """
         self.dictChildLookup = dict()
         
         for index, objChild in self.dfNodes.iterrows():
