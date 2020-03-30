@@ -42,9 +42,34 @@ class gnuCashAccess():
         self.dfSplits = pd.read_sql(sqlString, 
                              self.objCon, 
                              parse_dates=['enter_date', "post_date"])
-
+        
         self.dfSplits['price'] = self.dfSplits.value_num / self.dfSplits.value_denom
         self.dfSplits['post_month'] = self.dfSplits.post_date.dt.strftime("%Y-%m")
+        
+        sqlString = ("SELECT * FROM commodities;")
+        self.dfCommodities = pd.read_sql(sqlString, self.objCon)
+        
+        sqlString = ("SELECT * FROM prices;")
+        self.dfPrices = pd.read_sql(sqlString, self.objCon)
+        self.dfPrices['date'] = pd.to_datetime(self.dfPrices['date'], 
+                                               format="%Y-%m-%d %H:%M:%S")
+        self.dfPrices = self.dfPrices.groupby('date').last()
+        
+    def convertSplits2RootCurrency(self):
+        """
+        Get the currency of the root account and convert the other accounts
+        """
+        
+        lstAffectedAccounts = ['INCOME', 'EXPENSE','BANK']
+        
+        objRootAcc = ((self.dfAccounts['account_type'] == "ROOT") &
+                        (self.dfAccounts['name'] == "Root Account"))
+        
+        #self.dfAccounts[]
+        #for i, rowAcc in self.dfAccounts.iterrows():
+            
+            
+        
     
     def getAccGuid(self, name):
         idx = self.dfAccounts['name'] == name
