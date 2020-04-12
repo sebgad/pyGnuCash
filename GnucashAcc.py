@@ -30,9 +30,13 @@ class gnuCashAccess():
         
         self.dfAccounts = pd.read_sql(sqlString, self.objCon)
         self.objAccTree = TreeSearch(self.dfAccounts, 'guid', 'parent_guid')
+        
+        str_root_acc = self._getRootAccGuid()
 
         sqlString = ("SELECT t.enter_date,"
                      "t.post_date,"
+                     "t.currency_guid,"
+                     "t.description,"
                      "splits.value_num,"
                      "splits.value_denom,"
                      "splits.account_guid "
@@ -43,32 +47,47 @@ class gnuCashAccess():
                              self.objCon, 
                              parse_dates=['enter_date', "post_date"])
         
-        self.dfSplits['price'] = self.dfSplits.value_num / self.dfSplits.value_denom
         self.dfSplits['post_month'] = self.dfSplits.post_date.dt.strftime("%Y-%m")
         
-        sqlString = ("SELECT * FROM commodities;")
-        self.dfCommodities = pd.read_sql(sqlString, self.objCon)
+        sqlString = ("SELECT 	c.*, "
+                     "p.commodity_guid, "
+                     "p.currency_guid, "
+                     "p.value_num, " 
+                     "p.value_denom, "
+                     "MAX(date(p.[date])) as date "
+                     "FROM commodities c "
+                     "INNER JOIN prices p "
+                     "ON c.guid = p.commodity_guid "
+                     "GROUP BY p.commodity_guid  "
+                     "HAVING p.currency_guid='%s';" % str_root_acc)
+
+        self.dfCommodities = pd.read_sql(sqlString, 
+                                         self.objCon, 
+                                         parse_dates={'date':"%Y-%m-%d"})
         
-        sqlString = ("SELECT * FROM prices;")
-        self.dfPrices = pd.read_sql(sqlString, self.objCon)
-        self.dfPrices['date'] = pd.to_datetime(self.dfPrices['date'], 
-                                               format="%Y-%m-%d %H:%M:%S")
-        self.dfPrices = self.dfPrices.groupby('date').last()
+        self.dfSplits = pd.merge(left=self.dfSplits, 
+                                 right=self.dfCommodities,
+                                 left_on='currency_guid',
+                                 right_on='commodity_guid',
+                                 suffixes=('', '_commodities'),
+                                 how='left')
         
-    def convertSplits2RootCurrency(self):
-        """
-        Get the currency of the root account and convert the other accounts
-        """
+        idx = self.dfSplits['currency_guid'] == str_root_acc
+        self.dfSplits['price'] = self.dfSplits['value_num'] / self.dfSplits['value_denom']
+        self.dfSplits.loc[~idx, 'price'] = (self.dfSplits[~idx]['value_num'] / 
+                                            self.dfSplits[~idx]['value_denom'] * 
+                                            self.dfSplits[~idx]['value_num_commodities'] / 
+                                            self.dfSplits[~idx]['value_denom_commodities'])
+    
+    def _getRootAccGuid(self):
+        '''
+        '''
+        idxRootAcc = ((self.dfAccounts['account_type'] == "ROOT") &
+                      (self.dfAccounts['name'] == "Root Account"))
         
-        lstAffectedAccounts = ['INCOME', 'EXPENSE','BANK']
+        strCommodityRootAcc = self.dfAccounts[idxRootAcc]['commodity_guid'].values[0]
         
-        objRootAcc = ((self.dfAccounts['account_type'] == "ROOT") &
-                        (self.dfAccounts['name'] == "Root Account"))
-        
-        #self.dfAccounts[]
-        #for i, rowAcc in self.dfAccounts.iterrows():
-            
-            
+        return strCommodityRootAcc
         
     
     def getAccGuid(self, name):
