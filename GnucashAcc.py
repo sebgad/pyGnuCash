@@ -8,7 +8,6 @@ Created on Mon Dec  9 20:47:03 2019
 
 import pandas as pd
 import sqlite3
-import datetime as dt
 import numpy as np
 from treeSearch import TreeSearch
 
@@ -25,14 +24,26 @@ class gnuCashAccess():
         Parameter:
             strPath: Local Path to GnuCash-File
         '''
-        self.objCon = sqlite3.connect(strPath)
-        sqlString = ("SELECT * FROM accounts;")
         
+        # Initialize the SQLite3 Connection to the GnuCash Database
+        # IMPORTANT: For using this modul, you need to save the GnuCash-File in SQLite-Format
+        self.objCon = sqlite3.connect(strPath)
+        
+        # Get all Columns from Accounts table
+        sqlString = ("SELECT * FROM accounts;")
         self.dfAccounts = pd.read_sql(sqlString, self.objCon)
+        
+        # Initialize a TreeSearch object        
         self.objAccTree = TreeSearch(self.dfAccounts, 'guid', 'parent_guid')
+        
+        # Get guid of the root account
+        str_root_acc = self._getRootAccGuid()
 
+        # Get all Splits and in addition transaction information of the splits
         sqlString = ("SELECT t.enter_date,"
                      "t.post_date,"
+                     "t.currency_guid,"
+                     "t.description,"
                      "splits.value_num,"
                      "splits.value_denom,"
                      "splits.account_guid "
@@ -42,9 +53,57 @@ class gnuCashAccess():
         self.dfSplits = pd.read_sql(sqlString, 
                              self.objCon, 
                              parse_dates=['enter_date', "post_date"])
-
-        self.dfSplits['price'] = self.dfSplits.value_num / self.dfSplits.value_denom
+        
         self.dfSplits['post_month'] = self.dfSplits.post_date.dt.strftime("%Y-%m")
+        
+        # Get Commodity information for stocks, foreign currencies, etc. and take the latest price
+        sqlString = ("SELECT 	c.guid, "
+                     "p.commodity_guid, "
+                     "p.currency_guid, "
+                     "p.value_num, " 
+                     "p.value_denom, "
+                     "MAX(date(p.[date])) as date "
+                     "FROM commodities c "
+                     "INNER JOIN prices p "
+                     "ON c.guid = p.commodity_guid "
+                     "GROUP BY p.commodity_guid  "
+                     "HAVING p.currency_guid='%s';" % str_root_acc)
+
+        self.dfCommodities = pd.read_sql(sqlString, 
+                                         self.objCon, 
+                                         parse_dates={'date':"%Y-%m-%d"})
+        
+        # Join Splits and Commodities in order to convert all splits in the currency of the root account
+        self.dfSplits = pd.merge(left=self.dfSplits, 
+                                 right=self.dfCommodities,
+                                 left_on='currency_guid',
+                                 right_on='commodity_guid',
+                                 suffixes=('', '_commodities'),
+                                 how='left')
+        
+        # All Splits that have the root currency
+        idx = self.dfSplits['currency_guid'] == str_root_acc
+        
+        # Calculate the price of the split
+        self.dfSplits['price'] = self.dfSplits['value_num'] / self.dfSplits['value_denom']
+        
+        # Calculate the price of the splits which are not in the root currency --> ~idx
+        self.dfSplits.loc[~idx, 'price'] = (self.dfSplits[~idx]['value_num'] / 
+                                            self.dfSplits[~idx]['value_denom'] * 
+                                            self.dfSplits[~idx]['value_num_commodities'] / 
+                                            self.dfSplits[~idx]['value_denom_commodities'])
+    
+    def _getRootAccGuid(self):
+        '''
+        Returns the guid of the root account
+        '''
+        idxRootAcc = ((self.dfAccounts['account_type'] == "ROOT") &
+                      (self.dfAccounts['name'] == "Root Account"))
+        
+        strCommodityRootAcc = self.dfAccounts[idxRootAcc]['commodity_guid'].values[0]
+        
+        return strCommodityRootAcc
+        
     
     def getAccGuid(self, name):
         idx = self.dfAccounts['name'] == name
