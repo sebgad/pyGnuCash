@@ -14,7 +14,18 @@ import numpy as np
 import matplotlib.ticker as mticker
 
 class ReportItem():
+    '''
+    Generate a ReportItem which can be read by a JINJA2-Template in order to generate a html-Outputfile
+    '''
     def __init__(self, df, title=None, showTotal=True):
+        '''  
+        Initialize ReportItem - Object
+        
+        Parameter:
+            title:      Title which is used in the report Item
+            showTotal:  Show Total Sum Columns in Data Table on the right
+        '''
+        
         self.showTotal = None
         
         if isinstance(df, pd.DataFrame):
@@ -34,13 +45,27 @@ class ReportItem():
             if showTotal == True:
                 self.showTotal = 'row'
         
-        self.figsize = (22, 15)
+        self.figsize = (23, 15)
         self.figsize = np.array(self.figsize)/2.54
         self.title = title
         self.figByteString = BytesIO()
         self.figByteString64 = None
     
     def create_figure(self, kind='stackedbar', args=dict()):
+        '''
+        Creates a Matplotlib Fighure
+        
+        Parameters
+        ----------
+        kind : Plot style: stackedbar, bar and pie
+        args : Matplotlib.pyplot arguments
+
+        Returns
+        -------
+        None.
+
+        '''
+        
         f, ax = plt.subplots(constrained_layout=True, 
                              figsize=self.figsize)
         if kind=='stackedbar' or kind=='bar':
@@ -79,6 +104,14 @@ class ReportItem():
         plt.close(f)
             
     def ConvertForHtml(self):
+        '''
+        Convert Data Table descriptions (index and columns) to html conform descriptions
+
+        Returns
+        -------
+        None.
+
+        '''
         if self.showTotal == 'column':
             self.cols = self.cols + ['Total']
             self.df['Total'] = self.df.iloc[:,1:].sum(axis=1)
@@ -87,9 +120,17 @@ class ReportItem():
             self.cols = self.cols + ['Total']
             dfSum = pd.DataFrame({'Amount':self.df.sum(axis=0)}, index=['Total'])
             self.df = pd.concat([self.df, dfSum], axis=0)
-        self.ConvSpecChar()
+        self._ConvSpecChar()
         
-    def ConvSpecChar(self):
+    def _ConvSpecChar(self):
+        '''
+        Replace Special german Characters to display it correctly in html
+
+        Returns
+        -------
+        None.
+
+        '''
         mapping = [['ä', '&auml;'],
                    ['ö', '&ouml;'],
                    ['ü', '&uuml;'],

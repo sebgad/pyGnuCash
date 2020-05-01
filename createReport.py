@@ -14,7 +14,7 @@ import os
 from Reportitem import ReportItem
 from GnucashAcc import gnuCashAccess
 
-path = r"/home/sebastian/Dokumente/Bank/GnuCashSoftware/Privatvermögen.db.sql.gnucash"
+path = r"/home/sebastian/Dokumente/Documents@Sebastian/Bank/GnuCashSoftware/Privatvermögen.db.sql.gnucash"
 gnuCash = gnuCashAccess(path)     
 
 rcParams['font.family'] = 'sans-serif'
@@ -30,7 +30,7 @@ ReportItems = []
 today = dt.datetime.today()
 first = today.replace(day=1, hour=23, minute=59, second=59)
 endDate = first - dt.timedelta(days=1)
-startDate = endDate.replace(hour=0, minute=0, second=0) - dt.timedelta(days=364)
+startDate = endDate.replace(hour=0, minute=0, second=0) - dt.timedelta(days=365)
 
 # Get Monthly Expenses
 monthlyExp = gnuCash.getSplits(ParentID='2550a442ee387d7550de6b9e6d61f47a',
@@ -128,6 +128,18 @@ monthlyOvAVGRepItem.create_figure(kind='bar',
 ReportItems.append(monthlyOvAVGRepItem)
 
 
+# Cummulated Stacked Assets
+monthlyAssets = gnuCash.getSplits(ParentID="e94985e1c61e0169ef59236dcb9bc683").cumsum()
+idx = (monthlyAssets.index >= startDate.strftime("%Y-%m")) & (monthlyAssets.index <= endDate.strftime("%Y-%m"))
+
+monthlyAssetsRepItem = ReportItem(monthlyAssets[idx], "Cummulated Assets", showTotal=True)
+monthlyAssetsRepItem.create_figure(kind='stackedbar',
+                                  args={'ylabel':'Cummulated Assets [EUR]',
+                                        'xlabel':'Month'})
+monthlyAssetsRepItem.ConvertForHtml()
+ReportItems.append(monthlyAssetsRepItem)
+
+
 templateLoader = jinja2.FileSystemLoader(searchpath="./")
 templateEnv = jinja2.Environment(loader=templateLoader)
 TEMPLATE_FILE = "report.template"
@@ -137,7 +149,7 @@ outputText = template.render(timePeriod=startDate.strftime("%d.%m.%Y") +" - " \
                              ReportItems=ReportItems)
 
 #
-root = r"/home/sebastian/Dokumente/Bank/Financial Reports"
+root = r"/home/sebastian"
 file = endDate.strftime("%Y%m%d") + "_PrivateFinanceReport.html" 
 html_file = open(os.path.join(root, file), 'w')
 html_file.write(outputText)
