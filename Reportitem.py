@@ -139,3 +139,6 @@ class ReportItem():
         for mp in mapping:
             if self.df.columns.dtype == 'O':
                 self.df.columns = self.df.columns.str.replace(mp[0], mp[1])
+            
+            if self.df[self.cols[0]].dtype == 'O':
+                self.df[self.cols[0]] = self.df[self.cols[0]].str.replace(mp[0], mp[1])
