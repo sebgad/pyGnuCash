@@ -17,16 +17,17 @@ class ReportItem():
     '''
     Generate a ReportItem which can be read by a JINJA2-Template in order to generate a html-Outputfile
     '''
-    def __init__(self, df, title=None, showTotal=True):
+    def __init__(self, df, title=None, showTotal=True, symbol="&euro;"):
         '''  
         Initialize ReportItem - Object
         
         Parameter:
             title:      Title which is used in the report Item
             showTotal:  Show Total Sum Columns in Data Table on the right
+            symbol:     e.g. currency symbol, displayed in the report
         '''
         
-        self.showTotal = None
+        self.showTotal = showTotal
         
         if isinstance(df, pd.DataFrame):
             self.cols = df.columns
@@ -50,6 +51,7 @@ class ReportItem():
         self.title = title
         self.figByteString = BytesIO()
         self.figByteString64 = None
+        self.symbol = symbol
     
     def create_figure(self, kind='stackedbar', args=dict()):
         '''
@@ -112,14 +114,18 @@ class ReportItem():
         None.
 
         '''
-        if self.showTotal == 'column':
-            self.cols = self.cols + ['Total']
-            self.df['Total'] = self.df.iloc[:,1:].sum(axis=1)
-        
-        elif self.showTotal == 'row':
+        if self.showTotal in ['row']:
             self.cols = self.cols + ['Total']
             dfSum = pd.DataFrame({'Amount':self.df.sum(axis=0)}, index=['Total'])
             self.df = pd.concat([self.df, dfSum], axis=0)
+            
+        elif self.showTotal in ['column']:
+            self.cols = self.cols + ['Total']
+            self.df['Total'] = self.df.iloc[:,1:].sum(axis=1)
+        
+        elif self.showTotal == 'both':
+            print("not implemented yet!")
+        
         self._ConvSpecChar()
         
     def _ConvSpecChar(self):

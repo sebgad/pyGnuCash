@@ -45,7 +45,7 @@ h1,h2 {
                 <tr align="right">
                 {% for tblcol in Repitem.df.columns %}    
                     {% if tblrow[tblcol] is not string %}
-                        <td>{{ "{:0.2f}&euro;".format(tblrow[tblcol]) }}</td>
+                        <td>{{ "{:0.2f}{}".format(tblrow[tblcol], Repitem.symbol)}}</td>
                     {% else %}
                         <td>{{ tblrow[tblcol] }}</td>
                     {% endif %}
