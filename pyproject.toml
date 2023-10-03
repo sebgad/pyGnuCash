@@ -11,6 +11,13 @@ authors = [
 description = "This package provides a database API for gnucash SQL lite databases."
 readme = "README.md"
 requires-python = ">=3.7"
+depencies = [
+	'pandas',
+	'numpy',
+	'matplotlib',
+	'sqlite3',
+	'jinja2',
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",

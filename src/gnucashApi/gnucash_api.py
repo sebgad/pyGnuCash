@@ -7,10 +7,10 @@ Limitation: Only SQLite database files are currently supported.
 
 import sqlite3
 import datetime
+import pathlib
 import numpy as np
 import pandas as pd
 import jinja2
-import pathlib
 
 from .tree_search import TreeSearch
 from .gnucash_report import ReportItem
