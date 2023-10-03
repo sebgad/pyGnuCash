@@ -35,7 +35,7 @@ class ReportItem():
             symbol:     e.g. currency symbol, displayed in the report
         """
 
-        self.show_total = show_total
+        self.show_total = None
 
         if isinstance(dataframe, pd.DataFrame):
             self.cols = dataframe.columns
@@ -92,9 +92,6 @@ class ReportItem():
             plt.legend(self.data_frame[self.cols[0]].str[:] + ":" + self.data_frame[self.cols[1]].round(2).astype(str) \
                        + "€", loc='upper left', bbox_to_anchor=(.88,.9))
 
-            sum_overall = self.data_frame.sum()[1]
-            self.data_frame = self.data_frame.append({'Typ': 'Total', 'Amount':sum_overall}, ignore_index=True)
-
         plot_axis.set(**kwargs)
         figure.savefig(self.fig_byte_string, format='png')
         self.fig_byte_string64 = base64.b64encode(self.fig_byte_string.getbuffer()).decode('ascii')
@@ -107,8 +104,8 @@ class ReportItem():
         if self.show_total in ['row']:
             # Add Total row to the Pandas DataFrame
             self.cols = self.cols + ['Total']
-            data_frame_sum = pd.DataFrame({'Amount':self.data_frame.sum(axis=0)}, index=['Total'])
-            self.data_frame = pd.concat([self.data_frame, data_frame_sum], axis=0)
+            sum_overall = self.data_frame.sum().iloc[1]
+            self.data_frame.iloc[-1] = ['Total', sum_overall]
 
         elif self.show_total in ['column']:
             # Add Total column to the Pandas DataFrame

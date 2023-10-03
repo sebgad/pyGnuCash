@@ -9,8 +9,11 @@ import sqlite3
 import datetime
 import numpy as np
 import pandas as pd
+import jinja2
+import pathlib
 
 from .tree_search import TreeSearch
+from .gnucash_report import ReportItem
 
 class GnuCashDataAPI():
     """
@@ -94,6 +97,8 @@ class GnuCashDataAPI():
                                              self.df_splits[~idx]['value_num_commodities'] /
                                              self.df_splits[~idx]['value_denom_commodities'])
 
+        self._report_items = []
+
     def _get_root_account_guid(self)->str:
         """
         Returns the commodity guid of the the root account
@@ -166,7 +171,7 @@ class GnuCashDataAPI():
             idx_splits = (self.df_splits['account_guid'].isin(lst_children)) & (idx_date_range)
 
             # Add direct child account and sum up all splits
-            df_grouped[child['name']] = self.df_splits[idx_splits].groupby(by='post_month').agg('sum')['price']
+            df_grouped[child['name']] = self.df_splits[idx_splits].groupby(by='post_month')['price'].agg('sum')
 
         # fill all na values with 0
         df_grouped.fillna(value=0, inplace=True)
@@ -199,3 +204,40 @@ class GnuCashDataAPI():
 
         data_frame_top.fillna(value=0, inplace=True)
         return data_frame_top
+
+    def create_report_item(self, dataframe:(pd.DataFrame, pd.Series), title:str=None, show_total:bool=True,
+                           symbol:str="&euro;", kind:str='stackedbar', **kwargs):
+        """
+        Generate a ReportItem which can be read by a JINJA2-Template in order to generate a html-Outputfile
+
+        Keyword Arguments:
+            dataframe:  Pandas DataFrame or DataSeries to display in plot
+            title:      Plot title
+            show_total: Adds a final column or row which is displaying the total sum
+            symbol:     E.g. currency symbol, needs to be in html
+            kind:       Which kind of plot, currently 'stackedbar' and 'pie' are supported
+            **kwargs:   Keyword Arguments for matplotlib.pyplot.axis
+        """
+        report_item = ReportItem(dataframe=dataframe, title=title, show_total=show_total,
+                                 symbol=symbol)
+        report_item.create_figure(kind, **kwargs)
+        report_item.convert_for_html()
+        self._report_items.append(report_item)
+
+    def create_report(self, time_period:str, output_file_path:str):
+        """ Create a html file based on a jinja2 template
+
+        Keyword Arguments:
+            time_period:        Time period as string for the hole report, equal to report title
+            output_file_path:   Ouput path for the jinja2 report as html file
+        """
+        template_folder = pathlib.Path(__file__).parent.joinpath("templates")
+        template_loader = jinja2.FileSystemLoader(searchpath=template_folder)
+        template_environment = jinja2.Environment(loader=template_loader)
+        template_name = "report.template"
+
+        template_object = template_environment.get_template(template_name)
+        output = template_object.render(timePeriod=time_period, ReportItems=self._report_items)
+
+        with open(output_file_path, 'w', encoding="utf-8") as html_file:
+            html_file.write(output)

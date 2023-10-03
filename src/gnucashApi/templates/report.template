@@ -33,10 +33,10 @@ h1,h2 {
     <h1>Finance Report Time Period: {{ timePeriod }}</h1>
     {% for Repitem in ReportItems %}
         <h2>{{ Repitem.title }}</h2>
-        <img src="data:image/png;base64,{{ Repitem.figByteString64 }}">
+        <img src="data:image/png;base64,{{ Repitem.fig_byte_string64 }}">
         <table padding="10pt", id="customers">
             <tr>
-            {% for tblcol in Repitem.df.columns %}
+            {% for tblcol in Repitem.data_frame.columns %}
                 {% if 'Date' in tblcol %}
                     <th width=75px>
                 {% else %}
@@ -47,9 +47,9 @@ h1,h2 {
             {% endfor %}
             </tr>
 
-            {% for i, tblrow in Repitem.df.iterrows() %}
+            {% for i, tblrow in Repitem.data_frame.iterrows() %}
                 <tr align="right">
-                {% for tblcol in Repitem.df.columns %}
+                {% for tblcol in Repitem.data_frame.columns %}
                     {% if tblrow[tblcol] is not string %}
                         {% if 'Total' in tblcol or 'Amount' in tblcol %}
                             <td><b>{{ "{:0.2f}{}".format(tblrow[tblcol], Repitem.symbol)}}</b></td>
