@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gnucashApi"
-version = "0.0.1"
+version = "0.0.2"
 authors = [
   { name="SebGad", email="author@example.com"},
 ]
@@ -17,6 +17,7 @@ depencies = [
 	'matplotlib',
 	'sqlite3',
 	'jinja2',
+	'seaborn',
 ]
 classifiers = [
     "Programming Language :: Python :: 3",

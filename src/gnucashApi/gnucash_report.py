@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+import seaborn as sns
 
 class ReportItem():
     """
@@ -61,6 +62,7 @@ class ReportItem():
         self.fig_byte_string64 = None
         self.symbol = symbol
         self.plot_kind = None
+        sns.set_theme()
 
     def create_figure(self, kind='stackedbar', **kwargs):
         """
@@ -81,11 +83,12 @@ class ReportItem():
                 self.data_frame.plot.bar(stacked=False, ax=plot_axis, legend=False, x=self.cols[0])
 
             plt.xticks(rotation=45)
-            plot_axis.yaxis.set_major_locator(mticker.MaxNLocator(10))
+            plot_axis.yaxis.set_major_locator(mticker.MaxNLocator(15))
             plot_axis.grid(linestyle='dotted')
             plot_axis.grid(False, which='major', axis='x' )
 
-            plot_axis.legend(loc='lower left', bbox_to_anchor= (0.0, 1.01), ncol=4, borderaxespad=0, frameon=False)
+            plot_axis.legend(loc='lower left', bbox_to_anchor= (0.0, 1.01), ncol=3, borderaxespad=0,
+                             frameon=False)
 
         elif kind=='pie':
             self.data_frame.plot.pie(ax=plot_axis, labels=None, x=self.cols[0], y=self.cols[1], autopct='%1.f%%')
